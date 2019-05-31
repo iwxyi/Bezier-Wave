@@ -36,7 +36,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     // 慢慢暂停的时钟
     pause_timer = new QTimer(this);
-    pause_timer->setInterval(5000);
+    pause_timer->setInterval(3000);
     connect(pause_timer, &QTimer::timeout, [=]{
         if (!running)
         {
@@ -109,26 +109,17 @@ void BezierWaveBean::set_speedx(int x)
 
 void BezierWaveBean::set_rect(QRect rect)
 {
-    // 修改所有点的间隔
+    int delta = rect.height() - _rect.height();
+    inter = rect.width() / (count - 4);
+    for (int i = 0; i < keys.length(); i++)
     {
-        int width = rect.width();
-        inter = width / (count - 4);
-        for (int i = 0; i < keys.length(); i++)
-        {
-            keys[i].setX(inter * (i-2));
-            aim_keys[i].setX(keys.at(i).x());
-        }
-    }
-
-    // 修改整体的动画
-    {
-        int height = rect.height();
-        int delta = rect.height() - _rect.height();
-        for (int i = 0; i < keys.length(); i++)
-        {
-            keys[i].setY(keys.at(i).y()+delta);
-            aim_keys[i].setY(aim_keys.at(i).y()+delta);
-        }
+        // 修改所有点的间隔
+        //keys[i].setX(keys.at(i).x() * width / _rect.width()); // 按比例缩放……
+        keys[i].setX(inter*(i-2)+offsetx);
+        aim_keys[i].setX(keys.at(i).x());
+        // 修改整体的高度
+        keys[i].setY(keys.at(i).y()+delta);
+        aim_keys[i].setY(aim_keys.at(i).y()+delta);
     }
 
     _rect = rect;
@@ -141,7 +132,12 @@ QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
     // 每次绘图，更新一次偏移量
     if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
         offsety += offsety_direct;
+    else if (offsety <= -_max_offsety)
+        offsety = -_max_offsety;
+    else if (offsety >= _max_offsety)
+        offsety = _max_offsety;
 
+    // x轴方向的偏移
     for (int i = 0; i < keys.length(); i++)
     {
         keys[i].setX(keys[i].x()+speedx);
