@@ -8,19 +8,23 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     bw1 = new BezierWaveBean(this);
-    bw1->set_offsety(geometry().height()/20);
+//    bw1->set_offsety(geometry().height()/20);
+    bw1->set_speedx(1);
     bw1->start();
 
     bw2 = new BezierWaveBean(this);
-    bw1->set_offsety(geometry().height()/10);
+//    bw2->set_offsety(geometry().height()/10);
+    bw2->set_speedx(2);
     bw2->start();
 
     bw3 = new BezierWaveBean(this);
-    bw1->set_offsety(geometry().height()*3/20);
+//    bw3->set_offsety(geometry().height()*3/20);
+    bw3->set_speedx(1);
     bw3->start();
 
     bw4 = new BezierWaveBean(this);
-    bw1->set_offsety(geometry().height()/5);
+//    bw4->set_offsety(geometry().height()/5);
+    bw4->set_speedx(2);
     bw4->start();
 }
 

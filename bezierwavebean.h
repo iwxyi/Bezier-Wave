@@ -20,7 +20,9 @@ public:
     void resume();
     void pause();
 
+    void set_count(int x);
     void set_offsety(int x);
+    void set_speedx(int x);
 
     QPainterPath getPainterPath(QPainter &painter);
 
@@ -48,7 +50,7 @@ protected:
 
     int count;
     int inter;
-    int def_speed1;
+    int appear_speedy;
 
     int speedy, offsety;
     int offsety_direct;

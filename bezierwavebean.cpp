@@ -6,16 +6,16 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : target(parent)
 
     count = 14; // 点的总数
     inter = target->geometry().width()/(count-4);
-    def_speed1 = 20;
+    appear_speedy = 20;
 
-    speedy = def_speed1; // y移动速度
+    speedy = appear_speedy; // y移动速度
     offsety = 0; // y累计偏移
     offsety_direct = -1; // y短期偏移方向，-1上 和 1下
-    speedx = 4; // x移动速度
+    speedx = 3; // x移动速度
     offsetx = 0; // x累计偏移
 
     _offsety = 0;
-    _max_offsety = target->geometry().height()/5;
+    _max_offsety = target->geometry().height()/10; // 上下最大偏移的位置（注意：效果是正负翻倍的）
     running = false;
 
     // 更新目标点的时钟
@@ -45,6 +45,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : target(parent)
 
             for(int i = 0; i < keys.length(); i++)
                 keys[i].setY(target->geometry().height());
+            offsety = -_max_offsety/2; // 清空偏移（消失时默认都在最下面的，现在恢复）
         }
     });
 }
@@ -71,11 +72,14 @@ void BezierWaveBean::resume()
 {
     if (keys.length() == 0)
         return start();
+    if (running) return ; // 正在动画中，没必要
     update_timer->start();
     move_timer->start();
     offset_timer->start();
     pause_timer->stop();
     running = true;
+    slotUpdateAims(); // 立即更新目标
+    speedy = appear_speedy;
 }
 
 void BezierWaveBean::pause()
@@ -86,16 +90,30 @@ void BezierWaveBean::pause()
     pause_timer->start();
 }
 
+void BezierWaveBean::set_count(int x)
+{
+    if (x > 5)
+        count = x;
+}
+
 void BezierWaveBean::set_offsety(int x)
 {
     _offsety = x;
 }
 
+void BezierWaveBean::set_speedx(int x)
+{
+    speedx = x;
+}
+
 QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
 {
+    Q_UNUSED(painter);
+
     // 每次绘图，更新一次偏移量
     if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
         offsety += offsety_direct;
+
     for (int i = 0; i < keys.length(); i++)
     {
         keys[i].setX(keys[i].x()+speedx);
@@ -183,7 +201,7 @@ int BezierWaveBean::getRandomHeight()
 void BezierWaveBean::slotUpdateAims()
 {
     if (!running) return ;
-    if (speedy == def_speed1) speedy = 1;
+    if (speedy == appear_speedy) speedy = 1;
     // 生成随机的目标关键点
     for (int i = 0; i < aim_keys.length(); i++)
     {
