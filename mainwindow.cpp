@@ -180,15 +180,15 @@ void MainWindow::slotMovePositions()
         int del = aim.y()-cur.y();
         if (del > 0)
         {
-            if (speedy < del)
-                cur.setY(cur.y()+speedy);
+            if (speedy + abs(del)/50 < del)
+                cur.setY(cur.y()+speedy+del/50);
             else
                 cur.setY(cur.y()+del);
         }
         else if (del < 0)
         {
-            if (speedy < -del)
-                cur.setY(cur.y()-speedy);
+            if (speedy+abs(del)/50 < -del)
+                cur.setY(cur.y()-speedy+del/50);
             else
                 cur.setY(cur.y()+del);
         }
