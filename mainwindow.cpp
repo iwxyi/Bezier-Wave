@@ -63,15 +63,10 @@ void MainWindow::paintEvent(QPaintEvent *e)
 
 void MainWindow::resizeEvent(QResizeEvent *e)
 {
-    /*inter = geometry().width() / (count - 4);
-    // 调整所有点的横坐标
-    for (int i = 0; i < keys.length(); i++)
-    {
-        int x = inter*(i-2);
-        keys[i].setX(x);
-        aim_keys[i].setX(x);
-    }*/
-
+    bw1->set_rect(geometry());
+    bw2->set_rect(geometry());
+    bw3->set_rect(geometry());
+    bw4->set_rect(geometry());
     return QMainWindow::resizeEvent(e);
 }
 

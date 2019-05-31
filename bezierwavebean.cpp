@@ -1,6 +1,6 @@
 #include "bezierwavebean.h"
 
-BezierWaveBean::BezierWaveBean(QWidget* parent) : target(parent)
+BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent)
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -16,6 +16,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : target(parent)
 
     _offsety = 0;
     _max_offsety = target->geometry().height()/10; // 上下最大偏移的位置（注意：效果是正负翻倍的）
+    _rect = target->geometry();
     running = false;
 
     // 更新目标点的时钟
@@ -104,6 +105,33 @@ void BezierWaveBean::set_offsety(int x)
 void BezierWaveBean::set_speedx(int x)
 {
     speedx = x;
+}
+
+void BezierWaveBean::set_rect(QRect rect)
+{
+    // 修改所有点的间隔
+    {
+        int width = rect.width();
+        inter = width / (count - 4);
+        for (int i = 0; i < keys.length(); i++)
+        {
+            keys[i].setX(inter * (i-2));
+            aim_keys[i].setX(keys.at(i).x());
+        }
+    }
+
+    // 修改整体的动画
+    {
+        int height = rect.height();
+        int delta = rect.height() - _rect.height();
+        for (int i = 0; i < keys.length(); i++)
+        {
+            keys[i].setY(keys.at(i).y()+delta);
+            aim_keys[i].setY(aim_keys.at(i).y()+delta);
+        }
+    }
+
+    _rect = rect;
 }
 
 QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
