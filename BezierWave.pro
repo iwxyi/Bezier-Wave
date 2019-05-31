@@ -26,10 +26,12 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    bezierwavebean.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    bezierwavebean.h
 
 FORMS += \
         mainwindow.ui

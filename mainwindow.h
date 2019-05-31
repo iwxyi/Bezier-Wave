@@ -2,13 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPaintEvent>
-#include <QList>
-#include <QPainter>
-#include <random>
-#include <QPropertyAnimation>
-#include <QTimer>
-#include <QDebug>
+#include "bezierwavebean.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,29 +21,15 @@ protected:
     void resizeEvent(QResizeEvent* e) override;
 
 private:
-    int getRandomHeight();
+
 
 public slots:
-    void slotUpdatePositions();
-    void slotMovePositions();
-    void slotSetOffset();
+
 
 private:
     Ui::MainWindow *ui;
-    QTimer* update_timer;
-    QTimer* move_timer;
-    QTimer* offset_timer;
 
-    int count;
-    int inter;
-    int def_speed1;
-
-    int speedy, offsety;
-    int offsety_direct;
-    int speedx, offsetx;
-
-    QList<QPoint>keys;
-    QList<QPoint>aim_keys;
+    BezierWaveBean *bw1, *bw2, *bw3, *bw4;
 };
 
 #endif // MAINWINDOW_H
