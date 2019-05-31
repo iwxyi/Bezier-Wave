@@ -17,8 +17,12 @@ public:
     BezierWaveBean(QWidget *parent);
 
     void start();
+    void resume();
+    void pause();
 
-    QPainterPath getPainterPath();
+    void set_offsety(int x);
+
+    QPainterPath getPainterPath(QPainter &painter);
 
 protected:
     int getRandomHeight();
@@ -26,16 +30,21 @@ protected:
 signals:
 
 public slots:
-    void slotUpdatePositions();
-    void slotMovePositions();
+    void slotUpdateAims();
+    void slotMovePoints();
     void slotSetOffset();
 
 protected:
     QWidget* target;
+    int _offsety; // 多层波浪y轴偏移
+    int _max_offsety; // y轴上下偏移的最大值
 
     QTimer* update_timer;
     QTimer* move_timer;
     QTimer* offset_timer;
+    QTimer* pause_timer;
+
+    bool running;
 
     int count;
     int inter;

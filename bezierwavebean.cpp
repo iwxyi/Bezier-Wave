@@ -14,41 +14,87 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : target(parent)
     speedx = 4; // x移动速度
     offsetx = 0; // x累计偏移
 
-    // 初始化一个值
-    for (int i = 0; i < count; i++)
-        aim_keys.append(QPoint(inter*(i-2), getRandomHeight()));
-    for (int i = 0; i < aim_keys.size(); i++)
-        keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
-    slotUpdatePositions();
+    _offsety = 0;
+    _max_offsety = target->geometry().height()/5;
+    running = false;
 
     // 更新目标点的时钟
     update_timer = new QTimer(target);
     update_timer->setInterval(500);
-    connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdatePositions())); // 每隔一段时间更新一下位置
+    connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdateAims())); // 每隔一段时间更新一下位置
 
     // 移动波浪的时钟
     move_timer = new QTimer(this);
     move_timer->setInterval(50);
-    connect(move_timer, SIGNAL(timeout()), this, SLOT(slotMovePositions()));
+    connect(move_timer, SIGNAL(timeout()), this, SLOT(slotMovePoints()));
 
     // y偏移波浪的时钟
     offset_timer = new QTimer(this);
     offset_timer->setInterval(3000);
     connect(offset_timer, SIGNAL(timeout()), this, SLOT(slotSetOffset()));
+
+    // 慢慢暂停的时钟
+    pause_timer = new QTimer(this);
+    pause_timer->setInterval(5000);
+    connect(pause_timer, &QTimer::timeout, [=]{
+        if (!running)
+        {
+            update_timer->stop();
+            move_timer->stop();
+            offset_timer->stop();
+
+            for(int i = 0; i < keys.length(); i++)
+                keys[i].setY(target->geometry().height());
+        }
+    });
 }
 
 void BezierWaveBean::start()
 {
+    // 初始化一个值
+    aim_keys.clear();
+    keys.clear();
+    for (int i = 0; i < count; i++)
+        aim_keys.append(QPoint(inter*(i-2), getRandomHeight()));
+    for (int i = 0; i < aim_keys.size(); i++)
+        keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
+    slotUpdateAims();
+
     update_timer->start();
     move_timer->start();
     offset_timer->start();
 
+    running = true;
 }
 
-QPainterPath BezierWaveBean::getPainterPath()
+void BezierWaveBean::resume()
+{
+    if (keys.length() == 0)
+        return start();
+    update_timer->start();
+    move_timer->start();
+    offset_timer->start();
+    pause_timer->stop();
+    running = true;
+}
+
+void BezierWaveBean::pause()
+{
+    running = false;
+    for (int i = 0; i < aim_keys.length(); i++)
+        aim_keys[i].setY(getRandomHeight());
+    pause_timer->start();
+}
+
+void BezierWaveBean::set_offsety(int x)
+{
+    _offsety = x;
+}
+
+QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
 {
     // 每次绘图，更新一次偏移量
-    if (offsety+offsety_direct > -target->geometry().height()/4 && offsety+offsety_direct < target->geometry().height()/4)
+    if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
         offsety += offsety_direct;
     for (int i = 0; i < keys.length(); i++)
     {
@@ -57,6 +103,7 @@ QPainterPath BezierWaveBean::getPainterPath()
     }
 
     offsetx += speedx;
+    // 判断需不需要把右边移动到左边去
     if (offsetx >= inter)
     {
         QPoint p1(keys[0].x()-inter*2, getRandomHeight());
@@ -98,6 +145,13 @@ QPainterPath BezierWaveBean::getPainterPath()
         pots[i].setY(pots[i].y()+offsety);
     }
 
+    // 画进行判断的点
+    /*for (int i = 0; i < pots.length(); i++)
+    {
+        QPoint p = pots.at(i);
+        painter.drawEllipse(QRect(p.x()-2, p.y()-2, 4, 4));
+    }*/
+
     // 开始画图
     QPainterPath bezier;
     bezier.moveTo(0, target->geometry().height());
@@ -120,20 +174,24 @@ QPainterPath BezierWaveBean::getPainterPath()
 
 int BezierWaveBean::getRandomHeight()
 {
-    return rand() % (target->geometry().height()/2) + target->geometry().height()/2;
+    if (running)
+        return rand() % (target->geometry().height()/2) + target->geometry().height()/2;
+    else
+        return int(target->geometry().height()*1.5);
 }
 
-void BezierWaveBean::slotUpdatePositions()
+void BezierWaveBean::slotUpdateAims()
 {
+    if (!running) return ;
     if (speedy == def_speed1) speedy = 1;
     // 生成随机的目标关键点
     for (int i = 0; i < aim_keys.length(); i++)
     {
-        aim_keys[i].setY(getRandomHeight());
+        aim_keys[i].setY(getRandomHeight()+_offsety);
     }
 }
 
-void BezierWaveBean::slotMovePositions()
+void BezierWaveBean::slotMovePoints()
 {
     // 慢慢移动当前关键点到目标关键点
     for (int i = 0; i < keys.length(); i++)
@@ -164,6 +222,11 @@ void BezierWaveBean::slotMovePositions()
 
 void BezierWaveBean::slotSetOffset()
 {
+    if (!running)
+    {
+        offsety_direct = 1;
+        return ;
+    }
     // 每隔一段时间，稍微修改波浪的上下位置
     if (rand() & 1)
         offsety_direct = 1;

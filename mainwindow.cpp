@@ -8,15 +8,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     bw1 = new BezierWaveBean(this);
+    bw1->set_offsety(geometry().height()/20);
     bw1->start();
 
     bw2 = new BezierWaveBean(this);
+    bw1->set_offsety(geometry().height()/10);
     bw2->start();
 
     bw3 = new BezierWaveBean(this);
+    bw1->set_offsety(geometry().height()*3/20);
     bw3->start();
 
     bw4 = new BezierWaveBean(this);
+    bw1->set_offsety(geometry().height()/5);
     bw4->start();
 }
 
@@ -32,29 +36,22 @@ void MainWindow::paintEvent(QPaintEvent *e)
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setPen(Qt::black);
 
-    // 画进行判断的点
-    /*for (int i = 0; i < pots.length(); i++)
-    {
-        QPoint p = pots.at(i);
-        painter.drawEllipse(QRect(p.x()-2, p.y()-2, 4, 4));
-    }*/
-
     QPainterPath bezier;
 
     if (bw1 != nullptr)
-        bezier = bw1->getPainterPath();
+        bezier = bw1->getPainterPath(painter);
     painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
 
     if (bw2 != nullptr)
-        bezier = bw2->getPainterPath();
+        bezier = bw2->getPainterPath(painter);
     painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
 
     if (bw3 != nullptr)
-        bezier = bw3->getPainterPath();
+        bezier = bw3->getPainterPath(painter);
     painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
 
     if (bw4 != nullptr)
-        bezier = bw4->getPainterPath();
+        bezier = bw4->getPainterPath(painter);
     painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
 
     return QMainWindow::paintEvent(e);
@@ -72,4 +69,20 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     }*/
 
     return QMainWindow::resizeEvent(e);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    bw1->pause();
+    bw2->pause();
+    bw3->pause();
+    bw4->pause();
+}
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    bw1->resume();
+    bw2->resume();
+    bw3->resume();
+    bw4->resume();
 }
