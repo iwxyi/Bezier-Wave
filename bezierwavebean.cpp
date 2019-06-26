@@ -21,17 +21,17 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     // 更新目标点的时钟
     update_timer = new QTimer(target);
-    update_timer->setInterval(500);
+    update_timer->setInterval(rand()%800+1000);
     connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdateAims())); // 每隔一段时间更新一下位置
 
     // 移动波浪的时钟
     move_timer = new QTimer(this);
-    move_timer->setInterval(50);
+    move_timer->setInterval(rand()%10+35);
     connect(move_timer, SIGNAL(timeout()), this, SLOT(slotMovePoints()));
 
     // y偏移波浪的时钟
     offset_timer = new QTimer(this);
-    offset_timer->setInterval(3000);
+    offset_timer->setInterval(rand()%1000+4000);
     connect(offset_timer, SIGNAL(timeout()), this, SLOT(slotSetOffset()));
 
     // 慢慢暂停的时钟
@@ -129,43 +129,6 @@ QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
 {
     Q_UNUSED(painter);
 
-    // 每次绘图，更新一次偏移量
-    if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
-        offsety += offsety_direct;
-    else if (offsety <= -_max_offsety)
-        offsety = -_max_offsety;
-    else if (offsety >= _max_offsety)
-        offsety = _max_offsety;
-
-    // x轴方向的偏移
-    for (int i = 0; i < keys.length(); i++)
-    {
-        keys[i].setX(keys[i].x()+speedx);
-        aim_keys[i].setX(keys[i].x());
-    }
-
-    offsetx += speedx;
-    // 判断需不需要把右边移动到左边去
-    if (offsetx >= inter)
-    {
-        QPoint p1(keys[0].x()-inter*2, getRandomHeight());
-        QPoint p2(keys[0].x()-inter, getRandomHeight());
-        keys.insert(0, p2);
-        keys.insert(0, p1);
-        aim_keys.insert(0, QPoint(p2));
-        aim_keys.insert(0, QPoint(p1));
-
-        offsetx -= inter*2;
-
-        if (keys.length() > count+2)
-        {
-            keys.removeLast();
-            keys.removeLast();
-            aim_keys.removeLast();
-            aim_keys.removeLast();
-        }
-    }
-
     // 从关键点生成绘图点
     QList<QPoint>pots;
     for (int i = 0; i < keys.length(); i++)
@@ -243,8 +206,8 @@ void BezierWaveBean::slotMovePoints()
         int del = aim.y()-cur.y();
         if (del > 0)
         {
-            if (speedy + abs(del)/50 < del)
-                cur.setY(cur.y()+speedy+del/50);
+            if (speedy + abs(del)/100 < del)
+                cur.setY(cur.y()+speedy+del/100);
             else
                 cur.setY(cur.y()+del);
         }
@@ -258,6 +221,44 @@ void BezierWaveBean::slotMovePoints()
         else
             continue;
     }
+
+    // 每次绘图，更新一次偏移量
+    if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
+        offsety += offsety_direct;
+    else if (offsety <= -_max_offsety)
+        offsety = -_max_offsety;
+    else if (offsety >= _max_offsety)
+        offsety = _max_offsety;
+
+    // x轴方向的偏移
+    for (int i = 0; i < keys.length(); i++)
+    {
+        keys[i].setX(keys[i].x()+speedx);
+        aim_keys[i].setX(keys[i].x());
+    }
+
+    offsetx += speedx;
+    // 判断需不需要把右边移动到左边去
+    if (offsetx >= inter)
+    {
+        QPoint p1(keys[0].x()-inter*2, getRandomHeight());
+        QPoint p2(keys[0].x()-inter, getRandomHeight());
+        keys.insert(0, p2);
+        keys.insert(0, p1);
+        aim_keys.insert(0, QPoint(p2));
+        aim_keys.insert(0, QPoint(p1));
+
+        offsetx -= inter*2;
+
+        if (keys.length() > count+2)
+        {
+            keys.removeLast();
+            keys.removeLast();
+            aim_keys.removeLast();
+            aim_keys.removeLast();
+        }
+    }
+
     // 更新当前界面
     target->update();
 }
