@@ -35,28 +35,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::paintEvent(QPaintEvent *e)
 {
-    // 开始画图，设置painter
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setPen(Qt::black);
 
     QPainterPath bezier;
 
     if (bw1 != nullptr)
         bezier = bw1->getPainterPath(painter);
-    painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
+    painter.fillPath(bezier, QColor(255, 0, 0, 50));
 
     if (bw2 != nullptr)
         bezier = bw2->getPainterPath(painter);
-    painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
+    painter.fillPath(bezier, QColor(255, 0, 0, 50));
 
     if (bw3 != nullptr)
         bezier = bw3->getPainterPath(painter);
-    painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
+    painter.fillPath(bezier, QColor(255, 0, 0, 50));
 
     if (bw4 != nullptr)
         bezier = bw4->getPainterPath(painter);
-    painter.fillPath(bezier, QBrush(QColor(255, 0, 0, 50)));
+    painter.fillPath(bezier, QColor(255, 0, 0, 50));
 
     return QMainWindow::paintEvent(e);
 }
