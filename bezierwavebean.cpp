@@ -4,9 +4,9 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    count = 14; // 点的总数
+    count = 8; // 点的总数
     inter = target->geometry().width()/(count-4);
-    appear_speedy = 20; // 出现时的最大速度
+    appear_speedy = 5; // 出现时的最大速度
 
 //    speedy = appear_speedy; // y移动速度
     offsety = 0; // y累计偏移
@@ -20,17 +20,17 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
     _rect = target->geometry();
     running = false;
 
-    // 更新目标点的时钟
+    // 更新目标点的时钟：1.5秒钟左右
     update_timer = new QTimer(target);
     update_timer->setInterval(rand()%800+1000);
     connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdateAims())); // 每隔一段时间更新一下位置
 
-    // 移动波浪的时钟
+    // 移动波浪的时钟：40毫秒
     move_timer = new QTimer(this);
     move_timer->setInterval(rand()%10+35);
     connect(move_timer, SIGNAL(timeout()), this, SLOT(slotMovePoints()));
 
-    // y偏移波浪的时钟
+    // y偏移波浪的时钟：4秒左右
     offset_timer = new QTimer(this);
     offset_timer->setInterval(rand()%1000+4000);
     connect(offset_timer, SIGNAL(timeout()), this, SLOT(slotSetOffset()));
@@ -63,7 +63,7 @@ void BezierWaveBean::start()
     for (int i = 0; i < aim_keys.length(); i++)
         keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
     for (int i = 0; i < aim_keys.length(); i++)
-        speedys.append(appear_speedy * speedy_step);
+        speedys.append(- random() % (appear_speedy * speedy_step));
     slotUpdateAims();
 
     update_timer->start();
@@ -193,9 +193,9 @@ int BezierWaveBean::getRandomHeight()
 void BezierWaveBean::slotUpdateAims()
 {
     if (!running) return ;
-    for (int i = 0; i < speedys.length(); i++)
+    /*for (int i = 0; i < speedys.length(); i++)
         if (speedys.at(i) == appear_speedy*speedy_step)
-            speedys[i] = 1;
+            speedys[i] = 1;*/
     // 生成随机的目标关键点
     for (int i = 0; i < aim_keys.length(); i++)
     {
@@ -273,6 +273,11 @@ void BezierWaveBean::slotMovePoints()
 
     // 更新当前界面
     target->update();
+
+    QString ans = "";
+    for (int i = 5; i < 8; i++)
+        ans += " (" + QString::number(keys.at(i).y()) + ","+QString::number(keys.at(i).y())+")"+QString::number(speedys.at(i));
+    qDebug() << ans;
 }
 
 void BezierWaveBean::slotSetOffset()
