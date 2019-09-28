@@ -57,6 +57,8 @@ protected:
     int speedy, offsety;
     int offsety_direct;
     int speedx, offsetx;
+    QList<int>speedys;
+    int speedy_step;
 
     QList<QPoint>keys;
     QList<QPoint>aim_keys;
