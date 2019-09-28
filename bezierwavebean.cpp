@@ -60,9 +60,9 @@ void BezierWaveBean::start()
     speedys.clear();
     for (int i = 0; i < count; i++)
         aim_keys.append(QPoint(inter*(i-2), getRandomHeight()));
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < aim_keys.length(); i++)
         keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < aim_keys.length(); i++)
         speedys.append(appear_speedy * speedy_step);
     slotUpdateAims();
 
@@ -84,7 +84,7 @@ void BezierWaveBean::resume()
     pause_timer->stop();
     running = true;
     slotUpdateAims(); // 立即更新目标
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < speedys.length(); i++)
         speedys[i] = appear_speedy * speedy_step;
 }
 
@@ -193,8 +193,8 @@ int BezierWaveBean::getRandomHeight()
 void BezierWaveBean::slotUpdateAims()
 {
     if (!running) return ;
-    for (int i = 0; i < keys.length(); i++)
-        if (speedys.at(i) == appear_speedy)
+    for (int i = 0; i < speedys.length(); i++)
+        if (speedys.at(i) == appear_speedy*speedy_step)
             speedys[i] = 1;
     // 生成随机的目标关键点
     for (int i = 0; i < aim_keys.length(); i++)
@@ -214,25 +214,20 @@ void BezierWaveBean::slotMovePoints()
         if (del > 0) // 应当往下移动
         {
             speedys[i]++;
-
-            if (speedys.at(i)/speedy_step + abs(del)/100 < del)
+            /*if (speedys.at(i)/speedy_step + abs(del)/100 < del)
                 cur.setY(cur.y()+speedys.at(i)/speedy_step+del/100);
             else
-                cur.setY(cur.y()+del);
+                cur.setY(cur.y()+del);*/
         }
         else if (del < 0) // 应当往上移动
         {
             speedys[i]--;
-
-            if (speedys.at(i)/speedy_step+abs(del)/50 < -del)
+            /*if (speedys.at(i)/speedy_step+abs(del)/50 < -del)
                 cur.setY(cur.y()-speedys.at(i)/speedy_step+del/50);
             else
-                cur.setY(cur.y()+del);
+                cur.setY(cur.y()+del);*/
         }
-        else
-        {
-
-        }
+        cur.setY(cur.y()+speedys.at(i)/speedy_step);
     }
 
     // 每次绘图，更新一次偏移量
@@ -260,6 +255,8 @@ void BezierWaveBean::slotMovePoints()
         keys.insert(0, p1);
         aim_keys.insert(0, QPoint(p2));
         aim_keys.insert(0, QPoint(p1));
+        speedys.insert(0, speedys.at(speedys.length()-1));
+        speedys.insert(0, speedys.at(speedys.length()-2));
 
         offsetx -= inter*2;
 
@@ -269,6 +266,8 @@ void BezierWaveBean::slotMovePoints()
             keys.removeLast();
             aim_keys.removeLast();
             aim_keys.removeLast();
+            speedys.removeLast();
+            speedys.removeLast();
         }
     }
 
