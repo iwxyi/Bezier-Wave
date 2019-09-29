@@ -6,7 +6,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     count = 8; // 点的总数
     inter = target->geometry().width()/(count-4);
-    appear_speedy = 5; // 出现时的最大速度
+    appear_speedy = 3; // 出现时的最大速度
 
 //    speedy = appear_speedy; // y移动速度
     offsety = 0; // y累计偏移
