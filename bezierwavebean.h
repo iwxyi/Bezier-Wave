@@ -9,6 +9,7 @@
 #include <random>
 #include <QTimer>
 #include <QDebug>
+#include <QDateTime>
 
 class BezierWaveBean : public QObject
 {
@@ -30,6 +31,7 @@ public:
 protected:
     int getRandomHeight();
     int getRandom(int min, int max);
+    qint64 getTimestamp();
 
 signals:
 
@@ -60,6 +62,7 @@ protected:
     int speedx, offsetx;
     QList<int>speedys;
     int speedy_step;
+    QList<qint64>aim_updates_timestamp;
 
     QList<QPoint>keys;
     QList<QPoint>aim_keys;

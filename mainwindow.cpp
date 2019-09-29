@@ -9,22 +9,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
     bw1 = new BezierWaveBean(this);
 //    bw1->set_offsety(geometry().height()/20);
-    bw1->set_speedx(4);
+    bw1->set_speedx(getRandom(1,5));
     bw1->start();
 
     bw2 = new BezierWaveBean(this);
 //    bw2->set_offsety(geometry().height()/10);
-    bw2->set_speedx(3);
+    bw2->set_speedx(getRandom(1,5));
     bw2->start();
 
     bw3 = new BezierWaveBean(this);
 //    bw3->set_offsety(geometry().height()*3/20);
-    bw3->set_speedx(5);
+    bw3->set_speedx(getRandom(1,5));
     bw3->start();
 
     bw4 = new BezierWaveBean(this);
 //    bw4->set_offsety(geometry().height()/5);
-    bw4->set_speedx(2);
+    bw4->set_speedx(getRandom(1,5));
     bw4->start();
 }
 
@@ -66,6 +66,17 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     bw3->set_rect(geometry());
     bw4->set_rect(geometry());
     return QMainWindow::resizeEvent(e);
+}
+
+int MainWindow::getRandom(int min, int max)
+{
+#if defined (Q_OS_WIN) || defined(Q_OS_LINUX)
+    return mt() % (max-min+1) + min;
+#elif defined(Q_OS_MAC)
+
+#else
+    return rand() % (max-min+1) + min;
+#endif
 }
 
 void MainWindow::on_pushButton_clicked()

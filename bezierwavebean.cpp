@@ -14,7 +14,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
     speedx = 3; // x移动速度
     offsetx = 0; // x累计偏移
 
-    speedy_step = 10;
+    speedy_step = 3;
     _offsety = 0;
     _max_offsety = target->geometry().height()/10; // 上下最大偏移的位置（注意：效果是正负翻倍的）
     _rect = target->geometry();
@@ -22,7 +22,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     // 更新目标点的时钟：1.5秒钟左右
     update_timer = new QTimer(target);
-    update_timer->setInterval(getRandom(1000, 1800));
+    update_timer->setInterval(1000);
     connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdateAims())); // 每隔一段时间更新一下位置
 
     // 移动波浪的时钟：40毫秒
@@ -32,7 +32,7 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     // y偏移波浪的时钟：4秒左右
     offset_timer = new QTimer(this);
-    offset_timer->setInterval(getRandom(4000, 5000));
+    offset_timer->setInterval(4000);
     connect(offset_timer, SIGNAL(timeout()), this, SLOT(slotSetOffset()));
 
     // 慢慢暂停的时钟
@@ -58,19 +58,21 @@ void BezierWaveBean::start()
     aim_keys.clear();
     keys.clear();
     speedys.clear();
+    running = true;
     for (int i = 0; i < count; i++)
         aim_keys.append(QPoint(inter*(i-2), getRandomHeight()));
     for (int i = 0; i < aim_keys.length(); i++)
         keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
     for (int i = 0; i < aim_keys.length(); i++)
         speedys.append(- getRandom(appear_speedy * speedy_step / 2, appear_speedy * speedy_step));
-    slotUpdateAims();
+    qint64 timestamp = getTimestamp();
+    for (int  i = 0; i < aim_keys.length(); i++)
+        aim_updates_timestamp.append(timestamp);
 
     update_timer->start();
     move_timer->start();
     offset_timer->start();
 
-    running = true;
 }
 
 void BezierWaveBean::resume()
@@ -126,7 +128,8 @@ void BezierWaveBean::set_rect(QRect rect)
         keys[i].setY(keys.at(i).y()+delta);
         aim_keys[i].setY(aim_keys.at(i).y()+delta);
     }
-
+    double time = pow(rect.width(), 1.0 / 5); // 代表一个点显示几秒钟
+    speedx = rect.width() / (1000 / move_timer->interval()) / time;
     _rect = rect;
 }
 
@@ -185,7 +188,10 @@ QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
 int BezierWaveBean::getRandomHeight()
 {
     if (running)
-        return getRandom(target->geometry().height()>>2, target->geometry().height()>>1);
+    {
+        int y = getRandom(target->geometry().height() / 2, target->geometry().height() * 7 / 8);
+        return y;
+    }
     else
         return int(target->geometry().height()*1.5);
 }
@@ -201,6 +207,11 @@ int BezierWaveBean::getRandom(int min, int max)
 #endif
 }
 
+qint64 BezierWaveBean::getTimestamp()
+{
+    return QDateTime::currentDateTime().toMSecsSinceEpoch();
+}
+
 void BezierWaveBean::slotUpdateAims()
 {
     if (!running) return ;
@@ -208,9 +219,19 @@ void BezierWaveBean::slotUpdateAims()
         if (speedys.at(i) == appear_speedy*speedy_step)
             speedys[i] = 1;*/
     // 生成随机的目标关键点
+    int delta = target->geometry().height()/4;
+    qint64 timestamp = getTimestamp();
     for (int i = 0; i < aim_keys.length(); i++)
     {
-        aim_keys[i].setY(getRandomHeight()+_offsety);
+        if (aim_updates_timestamp.at(i) + 3000 > timestamp) // 3秒更新一次
+            continue;
+        int y = aim_keys.at(i).y() + getRandom(-delta, delta);
+        if (y < target->geometry().height() / 2)
+            y = target->geometry().height() / 2;
+        else if (y > target->geometry().height()*7/8)
+            y = target->geometry().height()*7/8;
+        aim_keys[i].setY(y + _offsety);
+        aim_updates_timestamp[i] = timestamp;
     }
 }
 
@@ -224,7 +245,8 @@ void BezierWaveBean::slotMovePoints()
         int del = aim.y()-cur.y();
         if (del > 0) // 应当往下移动
         {
-            speedys[i]++;
+            speedys[i]++; // 向下的加速度
+//            speedys[i] += sqrt(del)/speedx/speedy_step+1;
             /*if (speedys.at(i)/speedy_step + abs(del)/100 < del)
                 cur.setY(cur.y()+speedys.at(i)/speedy_step+del/100);
             else
@@ -232,14 +254,17 @@ void BezierWaveBean::slotMovePoints()
         }
         else if (del < 0) // 应当往上移动
         {
-            speedys[i]--;
+            speedys[i]--; // 向上的加速度/
+//            speedys[i] -= sqrt(-del)/speedx/speedy_step+1;
             /*if (speedys.at(i)/speedy_step+abs(del)/50 < -del)
                 cur.setY(cur.y()-speedys.at(i)/speedy_step+del/50);
             else
                 cur.setY(cur.y()+del);*/
         }
         cur.setY(cur.y()+speedys.at(i)/speedy_step);
+//        qDebug() << sqrt(abs(del))/speedx/speedy_step+1;
     }
+//    qDebug() << aim_keys[3].y() << keys[3].y() << speedys[3];
 
     // 每次绘图，更新一次Y方向的整体偏移量
     if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
@@ -255,11 +280,12 @@ void BezierWaveBean::slotMovePoints()
         keys[i].setX(keys[i].x()+speedx);
         aim_keys[i].setX(keys[i].x());
     }
-
     offsetx += speedx;
+
     // 判断需不需要把右边移动到左边去
     if (offsetx >= inter)
     {
+        qint64 timestamp = getTimestamp();
         QPoint p1(keys[0].x()-inter*2, getRandomHeight());
         QPoint p2(keys[0].x()-inter, getRandomHeight());
         keys.insert(0, p2);
@@ -268,6 +294,8 @@ void BezierWaveBean::slotMovePoints()
         aim_keys.insert(0, QPoint(p1));
         speedys.insert(0, speedys.at(speedys.length()-1));
         speedys.insert(0, speedys.at(speedys.length()-2));
+        aim_updates_timestamp.insert(0, timestamp);
+        aim_updates_timestamp.insert(0, timestamp);
 
         offsetx -= inter*2;
 
@@ -279,6 +307,8 @@ void BezierWaveBean::slotMovePoints()
             aim_keys.removeLast();
             speedys.removeLast();
             speedys.removeLast();
+            aim_updates_timestamp.removeLast();
+            aim_updates_timestamp.removeLast();
         }
     }
 
