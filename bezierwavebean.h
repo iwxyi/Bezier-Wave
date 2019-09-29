@@ -29,6 +29,7 @@ public:
 
 protected:
     int getRandomHeight();
+    int getRandom(int min, int max);
 
 signals:
 
@@ -62,6 +63,9 @@ protected:
 
     QList<QPoint>keys;
     QList<QPoint>aim_keys;
+
+    std::random_device rd;
+    std::mt19937 mt;
 };
 
 #endif // BEZIERWAVEBEAN_H

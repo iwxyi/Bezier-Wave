@@ -1,6 +1,6 @@
 #include "bezierwavebean.h"
 
-BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent)
+BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent), mt(rd())
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -22,17 +22,17 @@ BezierWaveBean::BezierWaveBean(QWidget* parent) : QObject(parent), target(parent
 
     // 更新目标点的时钟：1.5秒钟左右
     update_timer = new QTimer(target);
-    update_timer->setInterval(rand()%800+1000);
+    update_timer->setInterval(getRandom(1000, 1800));
     connect(update_timer, SIGNAL(timeout()), this, SLOT(slotUpdateAims())); // 每隔一段时间更新一下位置
 
     // 移动波浪的时钟：40毫秒
     move_timer = new QTimer(this);
-    move_timer->setInterval(rand()%10+35);
+    move_timer->setInterval(getRandom(35, 45));
     connect(move_timer, SIGNAL(timeout()), this, SLOT(slotMovePoints()));
 
     // y偏移波浪的时钟：4秒左右
     offset_timer = new QTimer(this);
-    offset_timer->setInterval(rand()%1000+4000);
+    offset_timer->setInterval(getRandom(4000, 5000));
     connect(offset_timer, SIGNAL(timeout()), this, SLOT(slotSetOffset()));
 
     // 慢慢暂停的时钟
@@ -63,7 +63,7 @@ void BezierWaveBean::start()
     for (int i = 0; i < aim_keys.length(); i++)
         keys.append(QPoint(aim_keys.at(i).x(), target->geometry().height()));
     for (int i = 0; i < aim_keys.length(); i++)
-        speedys.append(- random() % (appear_speedy * speedy_step));
+        speedys.append(- getRandom(appear_speedy * speedy_step / 2, appear_speedy * speedy_step));
     slotUpdateAims();
 
     update_timer->start();
@@ -185,9 +185,20 @@ QPainterPath BezierWaveBean::getPainterPath(QPainter& painter)
 int BezierWaveBean::getRandomHeight()
 {
     if (running)
-        return rand() % (target->geometry().height()/2) + target->geometry().height()/2;
+        return getRandom(target->geometry().height()>>2, target->geometry().height()>>1);
     else
         return int(target->geometry().height()*1.5);
+}
+
+int BezierWaveBean::getRandom(int min, int max)
+{
+#if defined (Q_OS_WIN) || defined(Q_OS_LINUX)
+    return mt() % (max-min+1) + min;
+#elif defined(Q_OS_MAC)
+
+#else
+    return rand() % (max-min+1) + min;
+#endif
 }
 
 void BezierWaveBean::slotUpdateAims()
@@ -230,7 +241,7 @@ void BezierWaveBean::slotMovePoints()
         cur.setY(cur.y()+speedys.at(i)/speedy_step);
     }
 
-    // 每次绘图，更新一次偏移量
+    // 每次绘图，更新一次Y方向的整体偏移量
     if (offsety+offsety_direct > -_max_offsety && offsety+offsety_direct < _max_offsety)
         offsety += offsety_direct;
     else if (offsety <= -_max_offsety)
@@ -274,10 +285,10 @@ void BezierWaveBean::slotMovePoints()
     // 更新当前界面
     target->update();
 
-    QString ans = "";
+    /*QString ans = "";
     for (int i = 5; i < 8; i++)
         ans += " (" + QString::number(keys.at(i).y()) + ","+QString::number(keys.at(i).y())+")"+QString::number(speedys.at(i));
-    qDebug() << ans;
+    qDebug() << ans;*/
 }
 
 void BezierWaveBean::slotSetOffset()
@@ -288,7 +299,7 @@ void BezierWaveBean::slotSetOffset()
         return ;
     }
     // 每隔一段时间，稍微修改波浪的上下偏移位置
-    if (rand() & 1)
+    if (getRandom(0,1))
         offsety_direct = 1;
     else
         offsety_direct = -1;
